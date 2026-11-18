@@ -85,9 +85,13 @@ function verifyScreenshots(outDir) {
   return { names, bytes };
 }
 
-// 1. Where the output goes, and 2. an empty directory to build it in.
-rmSync(output, { recursive: true, force: true });
+// 1. Where the output goes, and 2. a clear directory to build it in.
+// The grader mounts /output writable but its parent is read-only, so the directory itself stays:
+// only what is inside it is removed.
 mkdirSync(output, { recursive: true });
+for (const entry of readdirSync(output)) {
+  rmSync(join(output, entry), { recursive: true, force: true });
+}
 
 // 3. The source folders this entry is made of, then 4. the copy.
 const gameSource = join(here, 'game');
