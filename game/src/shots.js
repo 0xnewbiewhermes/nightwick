@@ -107,7 +107,7 @@ export function setupShot(game, name, seed = 1) {
     place(game, 'spitter', 946, 494, 22, rng);
     place(game, 'moth', 352, 566, 9, rng);
     place(game, 'grub', 700, 622, 52, rng);
-    place(game, 'shade', 282, 430, 1, rng);
+    place(game, 'shade', 282, 430, 12, rng);
     place(game, 'moth', 476, 302, 11, rng);
     place(game, 'moth', 842, 596, 9, rng);
     place(game, 'grub', 330, 512, 60, rng);

@@ -124,10 +124,6 @@ export class Enemy {
   }
 
   takeDamage(amount, game, source = 'beam') {
-    if (this.type === 'shade' && source === 'beam') {
-      this.hitFlash = 0.6;
-      return false;
-    }
     this.hp -= amount;
     this.hitFlash = Math.min(1, this.hitFlash + 0.5);
     if (this.hp <= 0 && !this.dead) {

@@ -230,7 +230,7 @@ game.flareBlast = (x, y, radius, damage, knockback) => {
   for (const e of game.enemies) {
     const d = Math.hypot(e.x - x, e.y - y);
     if (d < radius + e.radius) {
-      const armor = e.def.armor ?? 1;
+      const armor = e.def.boss ? (e.def.armor ?? 1) : 1;
       e.takeDamage(damage * armor, game, 'flare');
       const a = Math.atan2(e.y - y, e.x - x);
       e.vx += Math.cos(a) * knockback;

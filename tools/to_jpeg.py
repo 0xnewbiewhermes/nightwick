@@ -15,13 +15,18 @@ ROOT = Path(__file__).resolve().parent.parent
 SHOTS = ROOT / "screenshots"
 CAPTURES = ROOT / "captures"
 LIMIT = 262144
+# The four frames the entry ships, in the order the judge reads them (first is the cover).
+SHIP = ("1-play", "2-start", "3-gift", "4-dawn")
 
 
 def main() -> None:
     SHOTS.mkdir(exist_ok=True)
-    for png in sorted(CAPTURES.glob("*.png")):
+    for stem in SHIP:
+        png = CAPTURES / f"{stem}.png"
+        if not png.exists():
+            raise SystemExit(f"{png} is missing: run node shots.mjs first")
         img = Image.open(png).convert("RGB")
-        out = SHOTS / f"{png.stem}.jpg"
+        out = SHOTS / f"{stem}.jpg"
         best = None
         for quality in (92, 88, 84, 80, 76, 72, 68, 64, 60):
             img.save(out, "JPEG", quality=quality, optimize=True, progressive=True)
