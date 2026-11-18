@@ -26,6 +26,7 @@ const scenes = [
   ['2-start', 'start'],
   ['3-gift', 'upgrade'],
   ['4-dawn', 'dawn'],
+  ['5-defeat', 'defeat'],
 ];
 
 const only = process.argv[2];

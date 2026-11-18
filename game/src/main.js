@@ -172,6 +172,8 @@ function endRun(victory) {
   else sfx.lose();
 }
 
+game.endRun = endRun;
+
 function chooseUpgrade(index) {
   const card = game.upgradeCards[index];
   if (!card) return;

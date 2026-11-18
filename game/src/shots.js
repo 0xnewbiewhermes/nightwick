@@ -191,6 +191,34 @@ export function setupShot(game, name, seed = 1) {
     return;
   }
 
+  if (name === 'defeat') {
+    game.state = 'defeat';
+    game.time = 187;
+    game.score = 3480;
+    game.stats = { kills: 61, bestCombo: 2.1 };
+    game.waves.index = 5;
+    game.waves.total = 12;
+    game.waves.queue = [];
+    game.aim = { x: 700, y: 430 };
+    game.hurtFlash = 0.5;
+    game.decals.push({ x: 640, y: 470, r: 34, seed: 1.2 });
+    game.decals.push({ x: 610, y: 500, r: 22, seed: 3.4 });
+    for (let i = 0; i < 22; i++) {
+      game.particles.spawn({
+        x: 620 + rng.range(-60, 80),
+        y: 470 + rng.range(-50, 60),
+        vx: rng.range(-40, 40),
+        vy: rng.range(-70, -10),
+        life: rng.range(0.6, 1.8),
+        size: rng.range(1, 3),
+        color: i % 4 === 0 ? PALETTE.blood : PALETTE.ember,
+        drag: 1.4,
+        gravity: -18,
+      });
+    }
+    return;
+  }
+
   if (name === 'dawn') {
     game.state = 'victory';
     game.time = 402;
