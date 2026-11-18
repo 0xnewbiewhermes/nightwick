@@ -151,6 +151,48 @@ try {
     mkdirSync(dir, { recursive: true });
     writeFileSync(extra, Buffer.from(png.data, 'base64'));
     console.log(`wrote ${extra}`);
+  } else if (mode === 'interact') {
+    // A human-ish session: click to start, move the pointer, hold the beam, press keys, and take
+    // a screenshot at the end. This is the only path that exercises the real DOM input pipeline.
+    const width = Number(size.split('x')[0]);
+    const height = Number(size.split('x')[1]);
+    const mouse = (type, x, y, buttons = 0) =>
+      cdp.send('Input.dispatchMouseEvent', { type, x, y, button: 'left', buttons, clickCount: type === 'mousePressed' ? 1 : 0 }, sessionId);
+    const key = (type, code, keyCode, text) =>
+      cdp.send('Input.dispatchKeyEvent', { type, code, key: text ?? code, windowsVirtualKeyCode: keyCode, nativeVirtualKeyCode: keyCode }, sessionId);
+
+    await mouse('mousePressed', width / 2, height / 2, 1);
+    await mouse('mouseReleased', width / 2, height / 2, 0);
+    await sleep(600);
+    const started = await evaluate(cdp, sessionId, 'window.__nightwick.state');
+
+    await mouse('mousePressed', width * 0.7, height * 0.4, 1);
+    const startedAt = Date.now();
+    let i = 0;
+    while (Date.now() - startedAt < Number(flags.seconds || 20) * 1000) {
+      i++;
+      const x = width / 2 + Math.cos(i * 0.21) * width * 0.28;
+      const y = height / 2 + Math.sin(i * 0.17) * height * 0.24;
+      await mouse('mouseMoved', x, y, 1);
+      if (i % 7 === 0) await key('keyDown', 'KeyD', 68, 'd');
+      if (i % 7 === 3) await key('keyUp', 'KeyD', 68, 'd');
+      if (i % 11 === 0) {
+        await key('keyDown', 'Space', 32, ' ');
+        await key('keyUp', 'Space', 32, ' ');
+      }
+      if (i % 13 === 0) {
+        await key('keyDown', 'KeyW', 87, 'w');
+        await key('keyUp', 'KeyW', 87, 'w');
+      }
+      await sleep(90);
+    }
+    await mouse('mouseReleased', width * 0.6, height * 0.5, 0);
+    const state = await evaluate(cdp, sessionId, 'JSON.stringify({state:window.__nightwick.state, wave:window.__nightwick.waves.index+1, score:Math.round(window.__nightwick.score), kills:window.__nightwick.stats.kills, oil:Math.round(window.__nightwick.player.oil), enemies:window.__nightwick.enemies.length})');
+    const shot = await cdp.send('Page.captureScreenshot', { format: 'png' }, sessionId);
+    writeFileSync(extra, Buffer.from(shot.data, 'base64'));
+    console.log('started from title:', started);
+    console.log('after interaction:', state);
+    console.log(`wrote ${extra}`);
   } else if (mode === 'eval') {
     console.log(JSON.stringify(await evaluate(cdp, sessionId, extra), null, 1));
   } else if (mode === 'play') {
