@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nightwick — keep the flame</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: #05080b;
+        overflow: hidden;
+      }
+      body {
+        display: grid;
+        place-items: center;
+        cursor: none;
+      }
+      canvas {
+        display: block;
+        image-rendering: auto;
+        width: min(100vw, 160vh);
+        height: min(100vh, 62.5vw);
+        background: #05080b;
+      }
+      noscript {
+        color: #f2e6d2;
+        font: 16px/1.5 Georgia, serif;
+        padding: 2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="stage" aria-label="Nightwick, a game of light against ink"></canvas>
+    <noscript>Nightwick is a browser game and needs JavaScript enabled.</noscript>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
