@@ -30,6 +30,8 @@ export function setupShot(game, name, seed = 1) {
   game.globs.length = 0;
   game.pickups.length = 0;
   game.notices.length = 0;
+  if (game.decals) game.decals.length = 0;
+  game.hurtFlash = 0;
   game.hintAlpha = 0;
   game.time = 0;
   game.combo = 1;
@@ -46,11 +48,10 @@ export function setupShot(game, name, seed = 1) {
     game.player.beaming = false;
     game.player.trail = [];
     const spots = [
-      [430, 300],
-      [860, 330],
-      [905, 560],
-      [370, 590],
-      [700, 250],
+      [170, 300],
+      [1120, 270],
+      [190, 640],
+      [1110, 660],
     ];
     for (const [x, y] of spots) {
       const m = moth(game, x, y, rng);
@@ -110,6 +111,9 @@ export function setupShot(game, name, seed = 1) {
     place(game, 'moth', 476, 302, 11, rng);
     place(game, 'moth', 842, 596, 9, rng);
     place(game, 'grub', 330, 512, 60, rng);
+    for (let i = 0; i < 4; i++) {
+      game.decals.push({ x: 660 + rng.range(-60, 220), y: 520 + rng.range(-40, 140), r: rng.range(10, 22), seed: rng() * 6 });
+    }
 
     game.globs.push({ x: 906, y: 452, vx: -120, vy: 60, life: 3 });
     for (let i = 0; i < 3; i++) {

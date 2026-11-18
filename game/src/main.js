@@ -98,6 +98,8 @@ const game = {
   particles,
   player: new Player(WORLD.cx, WORLD.cy + 40),
   waves: null,
+  decals: [],
+  hurtFlash: 0,
   godMode,
 };
 
@@ -114,6 +116,8 @@ function startRun() {
   game.globs.length = 0;
   game.pickups.length = 0;
   game.notices.length = 0;
+  game.decals.length = 0;
+  game.hurtFlash = 0;
   game.upgrades = [];
   game.upgradeCards = [];
   game.hoveredCard = -1;
@@ -253,6 +257,8 @@ game.onEnemyKilled = (e, source) => {
   game.particles.ink(e.x, e.y, def.boss ? 34 : 8, def.boss ? 260 : 90);
   game.particles.ember(e.x, e.y, def.boss ? 30 : 6, def.boss ? 240 : 90);
   game.particles.ring(e.x, e.y, def.boss ? 26 : 8, PALETTE.ember, def.boss ? 0.9 : 0.35);
+  game.decals.push({ x: e.x, y: e.y, r: def.boss ? 40 : e.radius * 1.35, seed: game.rng() * 6 });
+  if (game.decals.length > 48) game.decals.shift();
   game.shake(def.boss ? 10 : 2.4, def.boss ? 0.5 : 0.12);
   if (def.boss) {
     sfx.bigKill();
@@ -438,6 +444,7 @@ function updateAmbient(dt) {
 
 function update(dt) {
   game.renderTime += dt;
+  game.hurtFlash = Math.max(0, game.hurtFlash - dt * 1.6);
   game.shakeTimer = Math.max(0, game.shakeTimer - dt);
   if (game.shakeTimer <= 0) game.shakeMag *= Math.exp(-dt * 8);
 

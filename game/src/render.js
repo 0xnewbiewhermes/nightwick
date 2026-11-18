@@ -48,6 +48,30 @@ export class Renderer {
       { x: 640, y: 660, sx: 6.4, sy: 3.4, vx: 4, vy: -3, a: 0.34, s: 1.5 },
       { x: 1080, y: 250, sx: 5.8, sy: 2.6, vx: -6, vy: 5, a: 0.3, s: 1.05 },
     ];
+    // Standing stones and dead saplings outside the chalk ring: the place the night happens in.
+    this.stones = Array.from({ length: 9 }, (_, i) => {
+      const a = (i / 9) * TAU + 0.22 + rng() * 0.12;
+      const r = WORLD.radius + 96 + rng() * 120;
+      return {
+        x: WORLD.cx + Math.cos(a) * r,
+        y: WORLD.cy + Math.sin(a) * r * 0.86,
+        w: 12 + rng() * 22,
+        h: 26 + rng() * 62,
+        tilt: (rng() - 0.5) * 0.22,
+        a,
+      };
+    });
+    this.saplings = Array.from({ length: 6 }, (_, i) => {
+      const a = (i / 6) * TAU + 1.1 + rng() * 0.3;
+      const r = WORLD.radius + 60 + rng() * 70;
+      return {
+        x: WORLD.cx + Math.cos(a) * r,
+        y: WORLD.cy + Math.sin(a) * r * 0.9,
+        h: 30 + rng() * 40,
+        lean: (rng() - 0.5) * 0.5,
+        seed: rng() * 100,
+      };
+    });
     this.dust = Array.from({ length: 90 }, () => ({
       x: rng.range(80, 1200),
       y: rng.range(60, 760),
@@ -74,6 +98,7 @@ export class Renderer {
     this.drawBackdrop(ctx, game, time);
     this.drawFog(ctx, time);
     this.drawArenaFloor(ctx);
+    this.drawScenery(ctx, game.player, time);
     this.drawDust(ctx, scene.dt, time);
 
     const withKeeper = game.state === 'playing' || game.state === 'paused' || game.state === 'upgrade';
@@ -82,6 +107,7 @@ export class Renderer {
       this.drawBeamHalo(ctx, game.player, time);
     }
 
+    this.drawDecals(ctx, game);
     for (const p of game.pickups) this.drawPickup(ctx, p, time);
     for (const g of game.globs) this.drawGlob(ctx, g);
     for (const e of game.enemies) this.drawEnemy(ctx, e, time, game);
@@ -92,8 +118,88 @@ export class Renderer {
     if (withKeeper) this.drawBeam(ctx, game.player, time);
     this.drawRing(ctx, time);
     this.drawVignette(ctx);
+    if (game.hurtFlash > 0.01) this.drawHurtFlash(ctx, game.hurtFlash);
     if (withKeeper) this.drawCursor(ctx, game.aim, game.player, time);
     ctx.restore();
+  }
+
+  // The clearing's furniture: standing stones and dead saplings, kept nearly black so they read
+  // as the place the light is in rather than as things to fight.
+  drawScenery(ctx, p, time) {
+    for (const s of this.saplings) {
+      const sway = Math.sin(time * 0.6 + s.seed) * 2.4;
+      ctx.strokeStyle = 'rgba(3, 6, 9, 0.92)';
+      ctx.lineWidth = 2.2;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.quadraticCurveTo(s.x + s.lean * 12 + sway, s.y - s.h * 0.55, s.x + s.lean * 26 + sway, s.y - s.h);
+      ctx.stroke();
+      ctx.lineWidth = 1.3;
+      for (let i = 0; i < 3; i++) {
+        const t = 0.45 + i * 0.18;
+        const bx = s.x + s.lean * 26 * t * 0.6 + sway * t;
+        const by = s.y - s.h * t;
+        ctx.beginPath();
+        ctx.moveTo(bx, by);
+        ctx.lineTo(bx + (i % 2 ? 1 : -1) * (10 + s.h * 0.12), by - 8 - i * 3);
+        ctx.stroke();
+      }
+    }
+
+    for (const st of this.stones) {
+      const d = Math.hypot(st.x - p.x, st.y - p.y);
+      const rimA = clamp(1 - d / 620, 0, 1) * 0.3;
+      ctx.save();
+      ctx.translate(st.x, st.y);
+      ctx.rotate(st.tilt);
+      ctx.fillStyle = 'rgba(2, 5, 8, 0.55)';
+      ctx.beginPath();
+      ctx.ellipse(0, 2, st.w * 0.8, 5, 0, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = '#05090d';
+      ctx.beginPath();
+      ctx.moveTo(-st.w / 2, 0);
+      ctx.lineTo(-st.w / 2, -st.h * 0.82);
+      ctx.quadraticCurveTo(-st.w * 0.18, -st.h * 1.04, st.w * 0.14, -st.h * 0.9);
+      ctx.lineTo(st.w / 2, -st.h * 0.72);
+      ctx.lineTo(st.w / 2, 0);
+      ctx.closePath();
+      ctx.fill();
+      if (rimA > 0.01) {
+        ctx.strokeStyle = withAlpha(PALETTE.ember, rimA);
+        ctx.lineWidth = 1.4;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  // Ink that has already been spilled stays on the floor for a while.
+  drawDecals(ctx, game) {
+    if (!game.decals || game.decals.length === 0) return;
+    for (const d of game.decals) {
+      ctx.save();
+      ctx.translate(d.x, d.y);
+      ctx.rotate(d.seed);
+      ctx.fillStyle = 'rgba(2, 4, 7, 0.42)';
+      for (let i = 0; i < 2; i++) {
+        const a = (i / 2) * TAU + d.seed;
+        ctx.beginPath();
+        ctx.ellipse(Math.cos(a) * d.r * 0.3, Math.sin(a) * d.r * 0.22, d.r * (0.55 - i * 0.1), d.r * (0.3 - i * 0.05), a, 0, TAU);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+  }
+
+  drawHurtFlash(ctx, amount) {
+    const g = ctx.createRadialGradient(640, 434, 120, 640, 434, 620);
+    g.addColorStop(0, 'rgba(120, 20, 14, 0)');
+    g.addColorStop(0.75, `rgba(150, 26, 16, ${0.22 * amount})`);
+    g.addColorStop(1, `rgba(190, 34, 20, ${0.5 * amount})`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 1280, 800);
   }
 
   drawBackdrop(ctx, game, time) {

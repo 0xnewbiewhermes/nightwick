@@ -153,6 +153,7 @@ export class Player {
     this.invuln = PLAYER.invulnOnHit;
     game.combo = 0;
     game.comboTimer = 0;
+    game.hurtFlash = 1;
     game.shake(11, 0.5);
     game.hitstop(0.09);
     game.particles.ink(this.x, this.y, 16, 180);
